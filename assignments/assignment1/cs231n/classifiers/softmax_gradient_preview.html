@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Softmax Gradient Derivation</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-card: #0f3460;
+            --text-primary: #eee;
+            --text-secondary: #a0a0a0;
+            --accent: #e94560;
+            --accent-secondary: #00d9ff;
+            --code-bg: #0d1117;
+            --border: #30475e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            line-height: 1.8;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(15, 52, 96, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+        
+        h2 {
+            color: var(--accent-secondary);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+            font-size: 1.5rem;
+        }
+        
+        h3 {
+            color: var(--accent);
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        p {
+            margin-bottom: 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            background: rgba(233, 69, 96, 0.2);
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: rgba(0, 217, 255, 0.1);
+        }
+        
+        code {
+            background: var(--code-bg);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: var(--accent-secondary);
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background: var(--code-bg);
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border-left: 4px solid var(--accent);
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            color: #e6e6e6;
+        }
+        
+        .math-block {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.2), rgba(0, 217, 255, 0.2));
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid var(--accent);
+        }
+        
+        .case-box {
+            background: rgba(0, 217, 255, 0.1);
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .final-box {
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.3), rgba(0, 217, 255, 0.3));
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: center;
+            border: 2px solid var(--accent);
+            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.2);
+        }
+        
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        li {
+            margin-bottom: 10px;
+        }
+        
+        hr {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: 30px 0;
+        }
+        
+        .insight {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .insight-icon {
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Softmax Gradient Derivation</h1>
+        <p class="subtitle">Understanding the math behind <code>dW[:, j] += X[i] * dscore</code></p>
+        
+        <hr>
+        
+        <h2>1. Notation and Setup</h2>
+        
+        <table>
+            <tr><th>Symbol</th><th>Shape</th><th>Description</th></tr>
+            <tr><td>\(N\)</td><td>scalar</td><td>Number of training examples</td></tr>
+            <tr><td>\(D\)</td><td>scalar</td><td>Input dimension (number of features)</td></tr>
+            <tr><td>\(C\)</td><td>scalar</td><td>Number of classes</td></tr>
+            <tr><td>\(\mathbf{X}\)</td><td>\((N, D)\)</td><td>Input data matrix</td></tr>
+            <tr><td>\(\mathbf{x}_i\)</td><td>\((D,)\)</td><td>The \(i\)-th training example</td></tr>
+            <tr><td>\(\mathbf{W}\)</td><td>\((D, C)\)</td><td>Weight matrix</td></tr>
+            <tr><td>\(\mathbf{y}\)</td><td>\((N,)\)</td><td>Labels, where \(y_i \in \{0, 1, ..., C-1\}\)</td></tr>
+        </table>
+        
+        <hr>
+        
+        <h2>2. Forward Pass</h2>
+        
+        <h3>Step 1: Compute Raw Scores (Logits)</h3>
+        <p>For the \(i\)-th training example and class \(j\):</p>
+        <div class="math-block">
+            \[z_j = \mathbf{x}_i \cdot \mathbf{W}_{:,j} = \sum_{k=0}^{D-1} x_{i,k} \cdot W_{k,j}\]
+        </div>
+        <pre><code>scores = X[i].dot(W)  # shape (C,)</code></pre>
+        
+        <h3>Step 2: Compute Softmax Probabilities</h3>
+        <div class="math-block">
+            \[p_j = \frac{e^{z_j}}{\sum_{c=0}^{C-1} e^{z_c}}\]
+        </div>
+        <pre><code>scores -= np.max(scores)  # numerical stability
+p = np.exp(scores)
+p /= p.sum()</code></pre>
+        
+        <h3>Step 3: Compute Cross-Entropy Loss</h3>
+        <div class="math-block">
+            \[L_i = -\log(p_{y_i})\]
+        </div>
+        <p>This is the negative log probability of the correct class.</p>
+        
+        <hr>
+        
+        <h2>3. Backward Pass (Gradient Derivation)</h2>
+        
+        <p>We want to compute \(\frac{\partial L_i}{\partial W_{k,j}}\) for all weights.</p>
+        
+        <h3>Using the Chain Rule</h3>
+        <div class="math-block">
+            \[\frac{\partial L_i}{\partial W_{k,j}} = \frac{\partial L_i}{\partial z_j} \cdot \frac{\partial z_j}{\partial W_{k,j}}\]
+        </div>
+        
+        <hr>
+        
+        <h3>Term 1: \(\frac{\partial L_i}{\partial z_j}\) — How loss changes w.r.t. score</h3>
+        
+        <div class="highlight-box">
+            <p><strong>This is <code>dscore</code> in the code!</strong></p>
+            <div class="math-block">
+                \[\frac{\partial L_i}{\partial z_j} = 
+                \begin{cases} 
+                p_j - 1 & \text{if } j = y_i \text{ (correct class)} \\
+                p_j & \text{if } j \neq y_i \text{ (wrong class)}
+                \end{cases}\]
+            </div>
+        </div>
+        
+        <pre><code>if j == y[i]:
+    dscore = p[j] - 1
+else:
+    dscore = p[j]</code></pre>
+        
+        <h4>Derivation:</h4>
+        <p>The loss is:</p>
+        <div class="math-block">
+            \[L_i = -\log(p_{y_i}) = -z_{y_i} + \log\left(\sum_c e^{z_c}\right)\]
+        </div>
+        
+        <div class="case-box">
+            <strong>Case 1:</strong> \(j = y_i\) (correct class)
+            \[\frac{\partial L_i}{\partial z_j} = -1 + \frac{e^{z_j}}{\sum_c e^{z_c}} = -1 + p_j = p_j - 1\]
+        </div>
+        
+        <div class="case-box">
+            <strong>Case 2:</strong> \(j \neq y_i\) (wrong class)
+            \[\frac{\partial L_i}{\partial z_j} = 0 + \frac{e^{z_j}}{\sum_c e^{z_c}} = p_j\]
+        </div>
+        
+        <hr>
+        
+        <h3>Term 2: \(\frac{\partial z_j}{\partial W_{k,j}}\) — How score changes w.r.t. weight</h3>
+        
+        <p>Recall: \(z_j = \sum_{k=0}^{D-1} x_{i,k} \cdot W_{k,j}\)</p>
+        
+        <div class="highlight-box">
+            <p><strong>This is why we multiply by <code>X[i]</code>!</strong></p>
+            <div class="math-block">
+                \[\frac{\partial z_j}{\partial W_{k,j}} = x_{i,k}\]
+            </div>
+        </div>
+        
+        <hr>
+        
+        <h3>Combining Both Terms</h3>
+        
+        <div class="math-block">
+            \[\frac{\partial L_i}{\partial W_{k,j}} = \underbrace{\frac{\partial L_i}{\partial z_j}}_{\text{dscore}} \cdot \underbrace{\frac{\partial z_j}{\partial W_{k,j}}}_{x_{i,k}}\]
+        </div>
+        
+        <p>For the entire column \(j\) of the weight matrix:</p>
+        <div class="math-block">
+            \[\frac{\partial L_i}{\partial \mathbf{W}_{:,j}} = \mathbf{x}_i \cdot \text{dscore}\]
+        </div>
+        
+        <pre><code>dW[:, j] += X[i] * dscore</code></pre>
+        
+        <hr>
+        
+        <h2>4. Dimension Analysis</h2>
+        
+        <table>
+            <tr><th>Expression</th><th>Shape</th><th>Description</th></tr>
+            <tr><td><code>dW</code></td><td>\((D, C)\)</td><td>Gradient of loss w.r.t. weights</td></tr>
+            <tr><td><code>dW[:, j]</code></td><td>\((D,)\)</td><td>Gradient for the \(j\)-th class column</td></tr>
+            <tr><td><code>X[i]</code></td><td>\((D,)\)</td><td>Feature vector of \(i\)-th example</td></tr>
+            <tr><td><code>dscore</code></td><td>scalar</td><td>\(\frac{\partial L_i}{\partial z_j}\)</td></tr>
+            <tr><td><code>X[i] * dscore</code></td><td>\((D,)\)</td><td>Scalar broadcast multiplication</td></tr>
+        </table>
+        
+        <hr>
+        
+        <h2>5. Intuition</h2>
+        
+        <p>The gradient update <code>dW[:, j] += X[i] * dscore</code> says:</p>
+        
+        <ol>
+            <li><strong><code>X[i]</code></strong> — Which input features were active for this example?</li>
+            <li><strong><code>dscore</code></strong> — How wrong was our prediction for class \(j\)?</li>
+            <li><strong>Product</strong> — Adjust weights proportionally to both</li>
+        </ol>
+        
+        <div class="case-box">
+            <strong>If \(j\) is the correct class</strong> (\(j = y_i\)):
+            <ul>
+                <li><code>dscore = p[j] - 1</code> is <strong>negative</strong> (since \(0 < p_j < 1\))</li>
+                <li>The gradient will <strong>increase</strong> \(W_{:,j}\) to make the correct class score higher</li>
+            </ul>
+        </div>
+        
+        <div class="case-box">
+            <strong>If \(j\) is a wrong class</strong> (\(j \neq y_i\)):
+            <ul>
+                <li><code>dscore = p[j]</code> is <strong>positive</strong></li>
+                <li>The gradient will <strong>decrease</strong> \(W_{:,j}\) to make this wrong class score lower</li>
+            </ul>
+        </div>
+        
+        <hr>
+        
+        <h2>6. Summary</h2>
+        
+        <p>The line:</p>
+        <pre><code>dW[:, j] += X[i] * dscore</code></pre>
+        
+        <p>Is a direct application of the <strong>chain rule</strong>:</p>
+        
+        <div class="final-box">
+            \[\boxed{\frac{\partial L}{\partial \mathbf{W}_{:,j}} = \mathbf{x}_i \cdot (p_j - \mathbf{1}_{j=y_i})}\]
+            <p style="margin-top: 15px; color: var(--text-secondary);">
+                Where \(\mathbf{1}_{j=y_i}\) is an indicator function that equals 1 when \(j\) is the correct class.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
