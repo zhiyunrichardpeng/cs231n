@@ -301,50 +301,41 @@ class FullyConnectedNet(object):
         # beta2, etc. Scale parameters should be initialized to ones and shift     #
         # parameters should be initialized to zeros.                               #
         ############################################################################
-        # self.params['W1'] = np.random.randn(input_dim, hidden_dims[0]) * weight_scale
+        self.params['W1'] = np.random.randn(input_dim, hidden_dims[0]) * weight_scale
         
-        # # b1 = np.zeros(M,)
-        # # C = num_classes
-        # # W2 with shape (M,C) = np.Gaussian(0.0, weight_scale)
-        # # b2 = np.zeros(C, )
+        # b1 = np.zeros(M,)
+        # C = num_classes
+        # W2 with shape (M,C) = np.Gaussian(0.0, weight_scale)
+        # b2 = np.zeros(C, )
 
-        # # b1 shape: (hidden_dim,)
-        # self.params['b1'] = np.zeros(hidden_dims[0])
+        # b1 shape: (hidden_dim,)
+        self.params['b1'] = np.zeros(hidden_dims[0])
 
-        # # Layer 2: Affine (Hidden -> Classes)
-        # # W2 shape: (hidden_dim, num_classes)
-        # # self.params['W2'] = np.random.randn(hidden_dims[0], num_classes) * weight_scale
-        # self.params['W2'] = np.random.randn(hidden_dims[0], hidden_dims[1]) * weight_scale
+        # Layer 2: Affine (Hidden -> Classes)
+        # W2 shape: (hidden_dim, num_classes)
+        # self.params['W2'] = np.random.randn(hidden_dims[0], num_classes) * weight_scale
+        self.params['W2'] = np.random.randn(hidden_dims[0], hidden_dims[1]) * weight_scale
 
-        # self.params['b2'] = np.zeros(hidden_dims[1])
+        self.params['b2'] = np.zeros(hidden_dims[1])
 
-        # self.params['W3'] = np.random.randn(hidden_dims[1], hidden_dims[2]) * weight_scale
+        self.params['W3'] = np.random.randn(hidden_dims[1], hidden_dims[2]) * weight_scale
 
-        # self.params['b3'] = np.zeros(hidden_dims[2])
+        self.params['b3'] = np.zeros(hidden_dims[2])
 
-        # self.params['W4'] = np.random.randn(hidden_dims[2], hidden_dims[3]) * weight_scale
+        self.params['W4'] = np.random.randn(hidden_dims[2], hidden_dims[3]) * weight_scale
 
-        # self.params['b4'] = np.zeros(hidden_dims[3])
+        self.params['b4'] = np.zeros(hidden_dims[3])
 
 
-        # self.params['W5'] = np.random.randn(hidden_dims[3], hidden_dims[4]) * weight_scale
+        self.params['W5'] = np.random.randn(hidden_dims[3], hidden_dims[4]) * weight_scale
 
-        # self.params['b5'] = np.zeros(hidden_dims[4])
+        self.params['b5'] = np.zeros(hidden_dims[4])
 
-        # self.params['W6'] = np.random.randn(hidden_dims[4], num_classes) * weight_scale
+        self.params['W6'] = np.random.randn(hidden_dims[4], num_classes) * weight_scale
 
-        # self.params['b6'] = np.zeros(num_classes)
+        self.params['b6'] = np.zeros(num_classes)
 
-        # Layer sizes: [input_dim, hidden_dims[0], ..., hidden_dims[-1], num_classes]
-        layer_dims = [input_dim] + hidden_dims + [num_classes]
-        # For hidden_dims=[100,100,100,100,100], this gives:
-        # [3072, 100, 100, 100, 100, 100, 10]
-        #         
-        for i in range(1, len(layer_dims)):
-            self.params[f'W{i}'] = np.random.randn(layer_dims[i-1], layer_dims[i]) * weight_scale
-            self.params[f'b{i}'] = np.zeros(layer_dims[i])
-			
-			
+
 
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -408,55 +399,38 @@ class FullyConnectedNet(object):
         # the class scores for X and storing them in the scores variable.          #
 
 
-# # Unpack variables for cleaner code
-#         W1, b1 = self.params['W1'], self.params['b1']
-#         W2, b2 = self.params['W2'], self.params['b2']       
-#         W3, b3 = self.params['W3'], self.params['b3']   
-#         W4, b4 = self.params['W4'], self.params['b4']   
-#         W5, b5 = self.params['W5'], self.params['b5']   
-#         W6, b6 = self.params['W6'], self.params['b6']   
+# Unpack variables for cleaner code
+        W1, b1 = self.params['W1'], self.params['b1']
+        W2, b2 = self.params['W2'], self.params['b2']       
+        W3, b3 = self.params['W3'], self.params['b3']   
+        W4, b4 = self.params['W4'], self.params['b4']   
+        W5, b5 = self.params['W5'], self.params['b5']   
+        W6, b6 = self.params['W6'], self.params['b6']   
         
-# # --- Layer 1: Affine -> ReLU ---
-#         # temp1 is the output of affine, cache_aff1 stores (X, W1, b1)
-#         out1, cache_aff1 = affine_forward(X, W1, b1)  # out1 used to be temp1
+# --- Layer 1: Affine -> ReLU ---
+        # temp1 is the output of affine, cache_aff1 stores (X, W1, b1)
+        out1, cache_aff1 = affine_forward(X, W1, b1)  # out1 used to be temp1
         
-#         # temp2, cache_relu = self.relu_forward(temp1)
-# # temp2 is the output of relu, cache_relu stores (out1)
-#         out_relu, cache_relu = relu_forward(out1)
+        # temp2, cache_relu = self.relu_forward(temp1)
+# temp2 is the output of relu, cache_relu stores (out1)
+        out_relu, cache_relu = relu_forward(out1)
         
         
-#         # temp3, cache_aff2 = self.affine_forward(temp2, self.params['W2'], self.params['b2'])
-# # --- Layer 2: Affine (Output Layer) ---
-#         # scores is the raw output (logits) BEFORE Softmax
-#         out2, cache_aff2 = affine_forward(out_relu, W2, b2)     
-#         out_relu2, cache_relu2 = relu_forward(out2)  
-#         # so temp3 (in line 129) is really the scores for maximum likelihood. not the one that is output from softmax_loss(...), due to line 144.
+        # temp3, cache_aff2 = self.affine_forward(temp2, self.params['W2'], self.params['b2'])
+# --- Layer 2: Affine (Output Layer) ---
+        # scores is the raw output (logits) BEFORE Softmax
+        out2, cache_aff2 = affine_forward(out_relu, W2, b2)     
+        out_relu2, cache_relu2 = relu_forward(out2)  
+        # so temp3 (in line 129) is really the scores for maximum likelihood. not the one that is output from softmax_loss(...), due to line 144.
         
-#         # scores, dx = self.softmax_loss(temp3, y)
-#         out3, cache_aff3 = affine_forward(out_relu2, W3, b3) 
-#         out_relu3, cache_relu3 = relu_forward(out3)  
-#         out4, cache_aff4 = affine_forward(out_relu3, W4, b4) 
-#         out_relu4, cache_relu4 = relu_forward(out4)  
-#         out5, cache_aff5 = affine_forward(out_relu4, W5, b5) 
-#         out_relu5, cache_relu5 = relu_forward(out5)  
-#         scores, cache_aff6 = affine_forward(out_relu5, W6, b6) 
-
-        caches = []
-        out = X
-        # Loop through hidden layers (L-1 of them): affine → relu
-        for i in range(1, self.num_layers):   # self.num_layers = 6 for 5 hidden layers
-            W, b = self.params[f'W{i}'], self.params[f'b{i}']
-            out, cache_aff = affine_forward(out, W, b)
-            caches.append(cache_aff)           # just append, don't name each one
-            out, cache_relu = relu_forward(out)
-            caches.append(cache_relu)
-
-        # Last layer: affine only (NO relu — scores go directly to softmax)
-        # FROM  W6, b6 = self.params['W6'], self.params['b6']   
-        W, b = self.params[f'W{self.num_layers}'], self.params[f'b{self.num_layers}']
-        # from scores, cache_aff6 = affine_forward(out_relu5, W6, b6) 
-        scores, cache_aff = affine_forward(out, W, b)
-        caches.append(cache_aff)
+        # scores, dx = self.softmax_loss(temp3, y)
+        out3, cache_aff3 = affine_forward(out_relu2, W3, b3) 
+        out_relu3, cache_relu3 = relu_forward(out3)  
+        out4, cache_aff4 = affine_forward(out_relu3, W4, b4) 
+        out_relu4, cache_relu4 = relu_forward(out4)  
+        out5, cache_aff5 = affine_forward(out_relu4, W5, b5) 
+        out_relu5, cache_relu5 = relu_forward(out5)  
+        scores, cache_aff6 = affine_forward(out_relu5, W6, b6) 
 
         #         
         #                                                                          #
@@ -497,16 +471,10 @@ class FullyConnectedNet(object):
         # dscores is the dx in the output of softmax_loss(x, y), i.e. my code line 135
         
 # We generally do NOT regularize biases (b1, b2), only weights (W1, W2)
-        # reg_loss = 0.5 * self.reg * (np.sum(W1**2) + np.sum(W2**2) + np.sum(W3**2) + np.sum(W4**2) + np.sum(W5**2) + np.sum(W6**2))
-        reg_loss = 0.5 * self.reg * sum(
-            np.sum(self.params[f'W{i}']**2) for i in range(1, self.num_layers + 1)
-        )
-
-
+        reg_loss = 0.5 * self.reg * (np.sum(W1**2) + np.sum(W2**2) + np.sum(W3**2) + np.sum(W4**2) + np.sum(W5**2) + np.sum(W6**2))
         # eg:  $$W1 = \begin{bmatrix} 1 & -2 & 3 \\ 0 & 4 & -1 \end{bmatrix}$$, 
         # then $$1 + 4 + 9 + 0 + 16 + 1 = \mathbf{31}$$
         
-
         loss = data_loss + reg_loss
         
         # dW2 = temp2.T @ dx
@@ -515,72 +483,57 @@ class FullyConnectedNet(object):
         # d_temp3, dw2, db2 = self.affine_backward(dx, cache_aff2)
         
 # 3. Backward Pass (Backpropagation)
-        # dx6, dw6, db6 = affine_backward(dscores, cache_aff6)        
+        dx6, dw6, db6 = affine_backward(dscores, cache_aff6)        
+        d_out5 = relu_backward(dx6, cache_relu5)   
 
-        # Backprop last layer (affine only)
-        cache_aff_last = caches.pop()       # pops the last affine cache
-        dout, dw, db = affine_backward(dscores, cache_aff_last)
-        grads[f'W{self.num_layers}'] = dw + self.reg * self.params[f'W{self.num_layers}']
-        grads[f'b{self.num_layers}'] = db
+        dx5, dw5, db5 = affine_backward(d_out5, cache_aff5)        
+        d_out4 = relu_backward(dx5, cache_relu4)   
 
-#         d_out5 = relu_backward(dx6, cache_relu5)   
-
-#         dx5, dw5, db5 = affine_backward(d_out5, cache_aff5)        
-#         d_out4 = relu_backward(dx5, cache_relu4)   
-
-#         # Backprop Layer 2 (Affine)
-#         # dscores flows into W2, b2, and out_relu
+        # Backprop Layer 2 (Affine)
+        # dscores flows into W2, b2, and out_relu
         
-#         dx4, dw4, db4 = affine_backward(d_out4, cache_aff4)        
-#         d_out3 = relu_backward(dx4, cache_relu3)   
-#         dx3, dw3, db3 = affine_backward(d_out3, cache_aff3)        
-#         d_out2 = relu_backward(dx3, cache_relu2)   
-#         dx2, dw2, db2 = affine_backward(d_out2, cache_aff2)        
-#         # d_temp2 = relu_backward(d_temp3, cache_relu)
-# # Backprop ReLU
-#         # dx2 flows through ReLU to become d_out1
-#         d_out1 = relu_backward(dx2, cache_relu)
+        dx4, dw4, db4 = affine_backward(d_out4, cache_aff4)        
+        d_out3 = relu_backward(dx4, cache_relu3)   
+        dx3, dw3, db3 = affine_backward(d_out3, cache_aff3)        
+        d_out2 = relu_backward(dx3, cache_relu2)   
+        dx2, dw2, db2 = affine_backward(d_out2, cache_aff2)        
+        # d_temp2 = relu_backward(d_temp3, cache_relu)
+# Backprop ReLU
+        # dx2 flows through ReLU to become d_out1
+        d_out1 = relu_backward(dx2, cache_relu)
         
-#         # d_temp1, dw1, db1 = self.affine_backward(d_temp2, cache_aff1)
-# # Backprop Layer 1 (Affine)
-#         # d_out1 flows into W1, b1, and original X
+        # d_temp1, dw1, db1 = self.affine_backward(d_temp2, cache_aff1)
+# Backprop Layer 1 (Affine)
+        # d_out1 flows into W1, b1, and original X
 
-#         dx, dw1, db1 = affine_backward(d_out1, cache_aff1)        
+        dx, dw1, db1 = affine_backward(d_out1, cache_aff1)        
         
-        # Backprop hidden layers in reverse
-        for i in range(self.num_layers - 1, 0, -1):   # 5, 4, 3, 2, 1
-            cache_relu = caches.pop()         # pop relu cache
-            dout = relu_backward(dout, cache_relu)
-            cache_aff = caches.pop()          # pop affine cache
-            dout, dw, db = affine_backward(dout, cache_aff)
-            grads[f'W{i}'] = dw + self.reg * self.params[f'W{i}']
-            grads[f'b{i}'] = db        
         
 # 4. Add Regularization Gradient
         # The derivative of (0.5 * reg * W^2) is (reg * W)
-        # dw6 += self.reg * W6
-        # dw5 += self.reg * W5
-        # dw4 += self.reg * W4
-        # dw3 += self.reg * W3
-        # dw2 += self.reg * W2
-        # dw1 += self.reg * W1
+        dw6 += self.reg * W6
+        dw5 += self.reg * W5
+        dw4 += self.reg * W4
+        dw3 += self.reg * W3
+        dw2 += self.reg * W2
+        dw1 += self.reg * W1
         # I missed this. dL/dw2, need also to consider the regularization term in the loss, as shown in reg_loss.
         
         # to dictionary:
         # grads{'W1'} = dw1
 # 5. Store gradients in dictionary
-        # grads['W1'] = dw1
-        # grads['b1'] = db1
-        # grads['W2'] = dw2
-        # grads['b2'] = db2       
-        # grads['W3'] = dw3
-        # grads['b3'] = db3
-        # grads['W4'] = dw4
-        # grads['b4'] = db4
-        # grads['W5'] = dw5
-        # grads['b5'] = db5
-        # grads['W6'] = dw6
-        # grads['b6'] = db6                
+        grads['W1'] = dw1
+        grads['b1'] = db1
+        grads['W2'] = dw2
+        grads['b2'] = db2       
+        grads['W3'] = dw3
+        grads['b3'] = db3
+        grads['W4'] = dw4
+        grads['b4'] = db4
+        grads['W5'] = dw5
+        grads['b5'] = db5
+        grads['W6'] = dw6
+        grads['b6'] = db6                
         # NOTE: To ensure that your implementation matches ours and you pass the   #
         # automated tests, make sure that your L2 regularization includes a factor #
         # of 0.5 to simplify the expression for the gradient.                      #

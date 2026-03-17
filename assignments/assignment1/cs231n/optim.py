@@ -60,18 +60,28 @@ def sgd_momentum(w, dw, config=None):
         config = {}
     config.setdefault("learning_rate", 1e-2)
     config.setdefault("momentum", 0.9)
-    v = config.get("velocity", np.zeros_like(w))
+    v = config.get("velocity", np.zeros_like(w)) # not 0.
 
     next_w = None
     ###########################################################################
     # TODO: Implement the momentum update formula. Store the updated value in #
     # the next_w variable. You should also use and update the velocity v.     #
     ###########################################################################
+    # vx = rho * vx + dw
+    # v = config["momentum"] * v + dw
+    # next_w = w - config["learning_rate"] * v
+    # v = config["momentum"] * v - dw  # config["learning_rate"] * 
 
+
+    # w -= config["learning_rate"] * v
+    v = config["momentum"] * v - config["learning_rate"] * dw # explain, see paper note.
+    next_w = w + v    
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     config["velocity"] = v
+    # next_w = w
+    # next_w = w # + v
 
     return next_w, config
 
@@ -101,7 +111,10 @@ def rmsprop(w, dw, config=None):
     # in the next_w variable. Don't forget to update cache value stored in    #
     # config['cache'].                                                        #
     ###########################################################################
-
+    # grad_squared = dw * dw
+    config['cache'] = config["decay_rate"] * config['cache'] + (1 - config["decay_rate"]) * (dw * dw)
+    next_w = w - config["learning_rate"] * dw / (np.sqrt(config['cache']) + config["epsilon"])
+    # config['cache'] = grad_squared
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -134,6 +147,7 @@ def adam(w, dw, config=None):
     config.setdefault("t", 0)
 
     next_w = None
+    config["t"] += 1    
     ###########################################################################
     # TODO: Implement the Adam update formula, storing the next value of w in #
     # the next_w variable. Don't forget to update the m, v, and t variables   #
@@ -142,7 +156,17 @@ def adam(w, dw, config=None):
     # NOTE: In order to match the reference output, please modify t _before_  #
     # using it in any calculations.                                           #
     ###########################################################################
+    config["m"] = config["beta1"] * config["m"] + (1 - config["beta1"]) * dw
+    config["v"] = config["beta2"] * config["v"] + (1 - config["beta2"]) * (dw * dw)
+    first_unbias = config["m"] / (1 - config["beta1"] ** config["t"])
+    second_unbias = config["v"] / (1 - config["beta2"] ** config["t"])
+    next_w = w - config["learning_rate"] * first_unbias / (np.sqrt(second_unbias) + config["epsilon"])
+    
 
+    # config["m"] = first_unbias
+    # config["v"] = second_unbias
+    # from the result, we find that the config["m"] should store first moment, not the first_unbias of moment.
+    # same for the config["v"]
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
