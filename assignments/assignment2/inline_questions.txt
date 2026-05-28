@@ -1,0 +1,36 @@
+## Inline Question 1:
+What happens if we do not divide the values being passed through inverse dropout by `p` in the dropout layer? Why does that happen?
+
+## Answer:
+[It is equivalent to this: in the vinala method, we did not time a "p" to the output. The output will be larger than we expect it to be.]
+
+antigravity reply:
+Without dividing by p, during training each neuron's expected output is p * x (since it's only active with probability p). But at test time, all neurons are active, so the output is x — which is 1/p times larger than what the network saw during training. This train/test mismatch causes the network to produce outputs that are too large at test time, hurting performance. Dividing by p during training rescales the expected output back to x, so train and test time are consistent.
+
+
+## Inline Question 2:
+Compare the validation and training accuracies with and without dropout -- what do your results suggest about dropout as a regularizer?
+
+## Answer:
+[With dropout keep ratio being 0.25, the training accuracy decreases, but the validation accuracy increases.]
+
+correction:
+Without dropout, the model achieves high training accuracy but lower validation accuracy — a sign of overfitting. With dropout (keep ratio 0.25), training accuracy decreases because the model can no longer memorize the training data (random neurons are disabled each forward pass). However, validation accuracy increases because the model is forced to learn more robust features that generalize better. This shows that dropout acts as an effective regularizer — it reduces the gap between training and validation performance by preventing overfitting.
+
+
+keep ratio 0.25 meaning? keep 25% of the neurons?
+Yes, exactly. keep_ratio = 0.25 means keep 25% of the neurons, drop 75%.
+
+Looking at your dropout code:
+
+python
+mask = (np.random.rand(*x.shape) < p) / p
+When p = 0.25:
+
+np.random.rand(...) < 0.25 → only ~25% of values are True (kept)
+~75% are False (set to zero)
+That's why the notebook output showed:
+
+Fraction of train-time output set to zero: 0.749784 (≈ 75%)
+
+It's a very aggressive dropout — only 1 in 4 neurons survives each forward pass, which is strong regularization.
