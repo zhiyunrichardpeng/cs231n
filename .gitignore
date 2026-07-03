@@ -4,3 +4,9 @@ build/
 *.pyd
 *.so
 .ipynb_checkpoints/
+
+# Datasets & Temp Files
+*.tar.gz
+**/cs231n/datasets/cifar-10-batches-py/
+prompt_for_github_push.txt
+
