@@ -43,7 +43,10 @@ def rnn_step_forward(x, prev_h, Wx, Wh, b):
     ##############################################################################
     # TODO: Implement a single forward step for the vanilla RNN.                 #
     ##############################################################################
-    # 
+    # next_h = tanh(Wx @ x + Wh @ prev_h) + b
+    # next_h = torch.tanh(x @ Wx + prev_h @ Wh) + b     
+    # correction: In a vanilla RNN cell, the bias b is part of the linear combination that is passed into the activation function.
+    next_h = torch.tanh(x @ Wx + prev_h @ Wh + b)     
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -73,7 +76,21 @@ def rnn_forward(x, h0, Wx, Wh, b):
     # input data. You should use the rnn_step_forward function that you defined  #
     # above. You can use a for loop to help compute the forward pass.            #
     ##############################################################################
-    # 
+    # correction:
+    N, T, D = x.shape
+    N, H = h0.shape
+    # h = torch.zeros(N, T, H)
+    h = torch.zeros(N, T, H, dtype=x.dtype, device=x.device)
+
+    # h[:, 0, :] = h0
+
+    for time_step in range(0,T):
+        next_h = rnn_step_forward(x[:,time_step,:], h0, Wx, Wh, b)
+        h0 = next_h
+        h[:, time_step, :] = next_h
+        # h[:, time_step+1, :] = next_h
+
+    # h = h0
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -101,7 +118,27 @@ def word_embedding_forward(x, W):
     #                                                                            #
     # HINT: This can be done in one line using Pytorch's array indexing.         #
     ##############################################################################
-    # 
+    
+    # my initial implementation. it works.
+    '''
+    # N = x.shape[0]
+    # T = x.shape[1]
+
+    # # correction:
+    # D = W.shape[1]
+    # out = torch.zeros(N, T, D)
+
+    # for n in range(0, N):
+    #     for t in range(0, T):
+    #         index = x[n,t]
+    #         out[n,t,:] = W[index,:]
+    '''
+    # one line version:
+    # out = W[x] ?? the dimentions do not match!
+    # see the cell below cell 10 for the explanation and an example.
+    # out = W[x]
+    out = W[x.long()]
+
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -227,7 +264,9 @@ def temporal_softmax_loss(x, y, mask, verbose=False):
     y_flat = y.reshape(N * T)
     mask_flat = mask.reshape(N * T)
 
-    loss = torch.nn.functional.cross_entropy(x_flat, y_flat, reduction='none')
+    # loss = torch.nn.functional.cross_entropy(x_flat, y_flat, reduction='none')
+    loss = torch.nn.functional.cross_entropy(x_flat, y_flat.long(), reduction='none')
+
     loss = loss * mask_flat.float()
     loss = loss.sum() / N
 

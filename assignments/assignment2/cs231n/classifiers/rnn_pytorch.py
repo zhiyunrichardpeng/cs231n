@@ -123,17 +123,25 @@ class CaptioningRNN:
         # In the forward pass you will need to do the following:                   #
         # (1) Use an affine transformation to compute the initial hidden state     #
         #     from the image features. This should produce an array of shape (N, H)#
+        # initial_hidden_state = features @ W_proj + b_proj
+        initial_hidden_state = affine_forward(features, W_proj, b_proj)
+
         # (2) Use a word embedding layer to transform the words in captions_in     #
         #     from indices to vectors, giving an array of shape (N, T, W).         #
+        # input_word_vectors = W_embed[captions_in]
+        input_word_vectors = word_embedding_forward(captions_in, W_embed)
         # (3) Use either a vanilla RNN or LSTM (depending on self.cell_type) to    #
         #     process the sequence of input word vectors and produce hidden state  #
         #     vectors for all timesteps, producing an array of shape (N, T, H).    #
+        hidden_state_vectors = rnn_forward(input_word_vectors, initial_hidden_state, Wx, Wh, b)
         # (4) Use a (temporal) affine transformation to compute scores over the    #
         #     vocabulary at every timestep using the hidden states, giving an      #
         #     array of shape (N, T, V).                                            #
+        temporal_scores = temporal_affine_forward(hidden_state_vectors, W_vocab, b_vocab)
         # (5) Use (temporal) softmax to compute loss using captions_out, ignoring  #
         #     the points where the output word is <NULL> using the mask above.     #
         #                                                                          #
+        loss = temporal_softmax_loss(temporal_scores, captions_out, mask, verbose=False)
         # Do not worry about regularizing the weights or their gradients!          #
         #                                                                          #
         # You also don't have to implement the backward pass.                      #
@@ -165,7 +173,7 @@ class CaptioningRNN:
         - max_length: Maximum length T of generated captions.
 
         Returns:
-        - captions: Array of shape (N, max_length) giving sampled captions,
+        - captions: Array of shape (N, max_length) giving sampled (i.e. predicted) captions,
           where each element is an integer in the range [0, V). The first element
           of captions should be the first sampled word, not the <START> token.
         """
@@ -181,9 +189,66 @@ class CaptioningRNN:
         ###########################################################################
         # TODO: Implement test-time sampling for the model. You will need to      #
         # initialize the hidden state of the RNN by applying the learned affine   #
-        # transform to the input image features. The first word that you feed to  #
+        # transform to the input image features.
+        
+        initial_hidden_state = affine_forward(features, W_proj, b_proj)
+        
+        # correction: add h_prev
+        h_prev = initial_hidden_state
+
+        #  The first word that you feed to  #
         # the RNN should be the <START> token; its value is stored in the         #
-        # variable self._start. At each timestep you will need to do to:          #
+        # variable self._start. 
+        # captions[0] = self._start
+        # correction:
+        current_word = torch.full((N,), self._start, dtype=torch.long, device=features.device)
+        # means, fill in the "current_word variable" with "self._start" (which is a word index, e.g., 1). 
+        
+
+        # timesteps = N
+        # correction: N is the batch size, not the length of the input that you want to go as time step.
+        # for t in timesteps:
+        for t in range(max_length):
+            
+            
+            input_word_vector = word_embedding_forward(current_word, W_embed)
+
+            # hidden_state_vector = rnn_forward(input_word_vector, initial_hidden_state, Wx, Wh, b)
+            # correction: rnn_forward is doing it in a matrix way, do all at once. we are in test period, we need to predict one, then next one.
+            hidden_state_vector = rnn_step_forward(input_word_vector, h_prev, Wx, Wh, b)
+            h_next = hidden_state_vector
+            # (4) Use a (temporal) affine transformation to compute scores over the    #
+            #     vocabulary at every timestep using the hidden states, giving an      #
+            #     array of shape (N, T, V).                                            #
+            # temporal_scores = temporal_affine_forward(h_next, W_vocab, b_vocab)
+            # correction: use matrix multiplication instead:
+            scores = h_next @ W_vocab + b_vocab
+            # this means, write the temporal_affine_forward function in a 2d way, explicit way, in this line.
+            # dim: (N, V). so we do N image captions task together, but one timestep at a time
+
+
+
+            # (5) Use (temporal) softmax to compute loss using captions_out, ignoring  #
+            #     the points where the output word is <NULL> using the mask above.     #
+            #                                                                          #
+            # loss = temporal_softmax_loss(temporal_scores, captions_out, mask, verbose=False)
+            # word_index, _value = max(temporal_scores)
+            # correction: 
+            word_index = torch.argmax(scores, dim=1)
+            #because score is dim: (N, V), we sort using the column dimension. so dim = 1.
+
+            # word_index is : (N,)
+
+            # captions[t+1] = word_index
+            # captions is with the shape: (N, max_length) . 
+            captions[:,t] = word_index
+
+            # correction:
+            h_prev = h_next
+
+            current_word = word_index
+
+        # At each timestep you will need to do to:          #
         # (1) Embed the previous word using the learned word embeddings           #
         # (2) Make an RNN step using the previous hidden state and the embedded   #
         #     current word to get the next hidden state.                          #
