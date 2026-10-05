@@ -36,7 +36,21 @@ def train(model, data_loader, train_optimizer, epoch, epochs, batch_size=32, tem
         # Run x_i and x_j through the model to get out_left, out_right.              #
         # Then compute the loss using simclr_loss_vectorized.                        #
         ##############################################################################
-        
+        # encoded = model.f(x_i) # i.e., h_i
+        # projected = model.g(encoded) # i.e., z_i
+        # out_left = projected
+        # correction: 
+        _, out_left = model(x_i) # i.e., z_i
+          
+
+
+
+        # encoded = model.f(x_j)# i.e., h_j
+        # projected = model.g(encoded)# i.e., z_j
+
+        # out_right = projected        
+        _, out_right = model(x_j) # i.e., z_j
+        loss = simclr_loss_vectorized(out_left, out_right, temperature, device=device)
         
         ##############################################################################
         #                               END OF YOUR CODE                             #
