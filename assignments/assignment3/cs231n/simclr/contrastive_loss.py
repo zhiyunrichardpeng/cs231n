@@ -212,7 +212,7 @@ def simclr_loss_vectorized(out_left, out_right, tau, device='cuda'):
     # Hint: Compute e^{sim / tau} and store into exponential, which should have shape 2N x 2N.
     # exponential = torch.exp(sim_positive_pairs(out_left, out_right)/tau)
     exponential = torch.exp(sim_matrix/tau)
-    numerator = exponential
+    # numerator = exponential
     
     # This binary mask zeros out terms where k=i.
     mask = (torch.ones_like(exponential, device=device) - torch.eye(2 * N, device=device)).to(device).bool()
